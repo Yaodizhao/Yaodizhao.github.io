@@ -10,7 +10,7 @@
         button {
             background-color: cornflowerblue;
             border: none;
-            color:  gold;
+            color:  white;
             padding: 1px 1px;
             text-align: center;
             text-decoration: none;
@@ -69,8 +69,8 @@
             drawAxis(ec2);
             document.getElementById('LeftTaperTr').onclick = (e) => drawFilesTr(1, 0.5, 0.5, 1, 0, 0);
             document.getElementById('ShoulderTr').onclick = (e) => drawFilesTr(1, 0, 0.5, 1, 0, 0);
-            document.getElementById('ScaleTr').onclick = (e) => drawFilesTr(2, 0, 0, 2, 0, 0);
-            document.getElementById('SpinTr').onclick = (e) => drawFilesTr(1, 0.5, -0.5, 1, 30, 10);
+            document.getElementById('ScaleTr').onclick = (e) => drawFilesTr(1.5, 0, 0, 1.5, 0, 0);
+            document.getElementById('SpinTr').onclick = (e) => drawFilesTr(1, 0.5, -0.5, 1, 30, 30);
             document.getElementById('MirrorTr').onclick = (e) => drawFilesTr(-1, 0, 0, 1, ec2.width, 0);
             document.getElementById('MoveTr').onclick = (e) => drawFilesTr(1, 0, 0, 1, 20, 20);
             document.getElementById('ResetTr').onclick = (e) => drawFilesTr(1, 0, 0, 1, 0, 0);
@@ -102,7 +102,8 @@
         }
         function drawFiles(ec) {
             var ctx = ec.getContext("2d");
-            ctx.strokeStyle = '#000000';
+            ctx.strokeStyle = '#FF0000';
+            ctx.lineWidth = 5;
             for (let index1 = 0; index1 < paths.length; index1++) {
                 const element1 = paths[index1];
                 ctx.beginPath();
