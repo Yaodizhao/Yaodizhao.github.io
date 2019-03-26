@@ -12,6 +12,29 @@
             margin-right: auto;
             display: block;
             width: 800px;
+
+        }
+        input[type="button"]{
+            background-color:aquamarine;
+            border: none;
+            color: crimson;
+            padding: 1px 1px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            -webkit-transition-duration: 0.4s;
+            /* Safari */
+            transition-duration: 0.4s;
+            cursor: pointer;
+            border: 2px solid #6495ed;
+            width: 100px;
+        }
+        input[type="file"] {
+            background-color:blanchedalmond;
+            border: none;
+            color: crimson;
         }
     </style>
 </head>
@@ -21,12 +44,14 @@
         <div>
             <p>请选择投影文件</p>
             <input type="file" id="input">
+            <br>
             <input type="button" value="北京54" onclick="BJ()">
             <input type="button" value="兰伯特" onclick="Lanbert()">
             <input type="button" value="墨卡托" onclick="Mercator()">
-           
+
             <p>请选择世界地图文件</p>
             <input type="file" id="input1">
+            <br>
             <input type="button" value="WGS84" onclick="WGS84()">
             <input type="button" value="墨卡托" onclick="Mercator2()">
             <input type="button" value="大圆航线" onclick="Circle()">
@@ -348,6 +373,7 @@
         function Mercator2() {
             var canvas = document.getElementById("canv");
             var cxt = canvas.getContext("2d");
+            cxt.strokeStyle = "black";
             cxt.clearRect(0, 0, 5000, 5000);
             grid5();
             cxt.beginPath();
@@ -420,7 +446,7 @@
             var canvas = document.getElementById("canv");
             var cxt = canvas.getContext("2d");
             cxt.beginPath();
-            cxt.strokeStyle = "black";
+            cxt.strokeStyle = "red";
             cxt.lineWidth = 2;
             if (routes != null) {
                 for (var j = 0; j < routes.length; j++) {
