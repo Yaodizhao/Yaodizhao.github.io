@@ -1,44 +1,59 @@
 ﻿<!DOCTYPE html>
 <html>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <head>
     <title>江苏省面积计算</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <style type="text/css">
+       
+        input[type="button"] {
+            background-color:deepskyblue;
+            border: none;
+            color: white;
+            padding: 1px 1px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            -webkit-transition-duration: 0.4s;
+            /* Safari */
+            transition-duration: 0.4s;
+            cursor: pointer;
+            border: 2px solid #6495ed;
+            width: 250px;
+        }
+        textarea {
+            height: 800px;
+            width: 500px;
+        }
+    </style>
 </head>
 <body>
+    输入文件
+    <input type="file" id="filemap">
+    <br>
+    <input type="button" id="readmap" value="读取文件" onclick="readmap()"><!--onclick-->
+    <br>
+    <input type="button" id="showmap" value="显示地图-墨卡托" onclick="show_JSMO()"><!--onclick-->
+    <input type="button" id="S_MO" value="计算面积" onclick="JS_area()"><!--onclick-->
+
+    <input type="button" id="MO_to_Q" value="计算经纬度-显示" onclick="MO_BL_change()"><!--onclick-->
+    <input type="button" id="S_tixing" value="外接梯形的经纬度坐标面积" onclick="tryarea()"><!--onclick-->
+    <input type="button" id="S_lr" value="固定一条经线的梯形面积积分" onclick="left_right()">
+    <!--
+         根据角度的球面多边形面积=S_BL_area()，梯形球面累加多边形面积=TXQM()
+         球面->平面=面积=PlanarPolygonAreaMeters2()，外接梯形面积=tryarea()
+         固定一天经线进行计算left_right()
+    -->
     <table>
         <tr>
             <td>
-                输入文件
-                <input type="file" id="filemap">
-                <input type="button" id="readmap" value="读取文件" onclick="readmap()"><!--onclick-->
-            </td>
-        </tr>
-        <tr>
-            <td>
-                <input type="button" id="showmap" value="显示地图-墨" onclick="show_JSMO()"><!--onclick-->
-                <input type="button" id="S_MO" value="计算面积" onclick="JS_area()"><!--onclick-->
-            </td>
-        </tr>
-        <tr>
-            <td>
-                <input type="button" id="MO_to_Q" value="计算经纬度-显示" onclick="MO_BL_change()"><!--onclick-->
-                <input type="button" id="S_tixing" value="外接梯形的经纬度坐标面积" onclick="tryarea()"><!--onclick-->
-                <input type="button" id="S_lr" value="固定一条经线的梯形面积积分" onclick="left_right()">
-                <!--
-                     根据角度的球面多边形面积=S_BL_area()，梯形球面累加多边形面积=TXQM()
-                     球面->平面=面积=PlanarPolygonAreaMeters2()，外接梯形面积=tryarea()
-                     固定一天经线进行计算left_right()
-                -->
+                <canvas id="canvas" width="900" height="800" style="border:1px solid #000000;"></canvas>
+                <textarea name="r_text" id="rr_text" cols="100" rows="30" onpropertychange="this.style.posHeight=this.scrollHeight "></textarea>
             </td>
         </tr>
     </table>
-    <table>
-        <tr>
-            <td>
-                <canvas id="canvas" width="1000" height="800" style="border:1px solid #000000;"></canvas>
-            </td>
-        </tr>
-    </table>
+
     <!--第一行-->
     <!--        <tr>    <td>南京市</td><td><canvas id="canvas_nanjing" width="200"height="20" style="border:1px solid #000000;"></canvas></td><td>"面积"</td>       </tr>
             <tr>    <td>无锡市</td><td><canvas id="canvas_wuxi" width="200"height="20" style="border:1px solid #000000;"></canvas></td><td>"面积"</td>          </tr>
@@ -54,25 +69,9 @@
             <tr>    <td>泰州市</td><td><canvas id="canvas_taizhou" width="200"height="20" style="border:1px solid #000000;"></canvas></td><td>"面积"</td>       </tr>
             <tr>    <td>宿迁市</td><td><canvas id="canvas_suqian" width="200"height="20" style="border:1px solid #000000;"></canvas></td><td>"面积"</td>        </tr>
     -->
-    <style>
-        table {
-            border: 1px solid #333338;
-            width: 100%;
-            text-align: center;
-        }
+    
 
-        tr {
-            border: 1px solid #0906F1;
-            text-align: center;
-        }
 
-        td {
-            border: 1px solid #000000;
-            text-align: center;
-        }
-    </style>
-
-<textarea name="r_text" id="rr_text" cols="100" rows="30" onpropertychange="this.style.posHeight=this.scrollHeight "></textarea>
 
 </body>
 <script type="text/javascript">
