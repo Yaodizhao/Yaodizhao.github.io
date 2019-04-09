@@ -78,7 +78,7 @@
             var ctx = ec.getContext("2d");
             var x = ec.width;
             var y = ec.height;
-            ctx.strokeStyle = '#F0F8FF';
+            ctx.strokeStyle = '#888888';
             for (let index = 0; index < x; index += 10) {
                 ctx.beginPath();
                 ctx.moveTo(index, 0);
@@ -102,7 +102,7 @@
         function drawFiles(ec) {
             var ctx = ec.getContext("2d");
             ctx.strokeStyle = '#FF0000';
-            ctx.lineWidth = 5;
+           
             for (let index1 = 0; index1 < paths.length; index1++) {
                 const element1 = paths[index1];
                 ctx.beginPath();
