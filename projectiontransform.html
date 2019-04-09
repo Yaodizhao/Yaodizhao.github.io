@@ -12,7 +12,7 @@
             margin-right: auto;
             display: block;
             width: 800px;
-
+            background-color:black;
         }
         input[type="button"]{
             background-color:aquamarine;
@@ -57,7 +57,7 @@
             <input type="button" value="大圆航线" onclick="Circle()">
         </div>
         <div>
-            <canvas id="canv" width="1000px" height="600px"></canvas>
+            <canvas id="canv" width="1000px" height="600px" ></canvas>
         </div>
     </div>
 
@@ -140,7 +140,8 @@
         function grid1() {//北京54格网
             var canvas = document.getElementById("canv");
             var cxt = canvas.getContext("2d");
-            cxt.beginPath()
+            cxt.strokeStyle = "white";
+            cxt.beginPath();
             cxt.lineWidth = 2;
             var x = 100;
             var y = 0;
@@ -159,6 +160,7 @@
         function grid2() {//墨卡托格网
             var canvas = document.getElementById("canv");
             var cxt = canvas.getContext("2d");
+            cxt.strokeStyle = "white";
             cxt.beginPath()
             cxt.lineWidth = 2;
             var x = 100;
@@ -179,6 +181,7 @@
         function grid3() {//兰伯特格网
             var canvas = document.getElementById("canv");
             var cxt = canvas.getContext("2d");
+            cxt.strokeStyle = "white";
             cxt.beginPath()
             cxt.lineWidth = 2;
             var x1 = 500;
@@ -200,14 +203,18 @@
 
 
             }
-
-            cxt.arc(500, -800, 1000, (Math.PI * 43 / 36), (Math.PI * 61 / 36));
+            for (i = 0; i < 16; i++) {
+                
+                cxt.arc(500, -800, 800 + 50 *i, (1.5 * Math.PI * 43 / 36), (2 * Math.PI * 61 / 36));
+            }
+           
 
             cxt.stroke();
         }
         function grid4() {//WGS84的格网
             var canvas = document.getElementById("canv");
             var cxt = canvas.getContext("2d");
+            cxt.strokeStyle = "white";
             cxt.beginPath()
             cxt.lineWidth = 1;
             var x = 40;
@@ -228,6 +235,7 @@
         function grid5() {//绘制世界版图墨卡托投影格网，间距为5度
             var canvas = document.getElementById("canv");
             var cxt = canvas.getContext("2d");
+            cxt.strokeStyle = "white";
             cxt.beginPath()
             cxt.lineWidth = 2;
             var x = 100;
@@ -258,9 +266,11 @@
         function Lanbert() {
             var canvas = document.getElementById("canv");
             var cxt = canvas.getContext("2d");
+            cxt.strokeStyle = "white";
             cxt.clearRect(0, 0, 5000, 5000);
             cxt.beginPath();
             cxt.lineWidth = 2;
+            grid3();
             var mb1 = Math.cos(B1) / Math.sqrt(1 - e1 * Math.pow(Math.sin(B1), 2));
             var mb2 = Math.cos(B2) / Math.sqrt(1 - e1 * Math.pow(Math.sin(B2), 2));
             var tb1 = Math.tan(Math.PI / 4 - B1 / 2) / Math.pow(((1 - Math.sqrt(e1) * Math.sin(B1)) / (1 + Math.sqrt(e1) * Math.sin(B1))), (Math.sqrt(e1) / 2));
@@ -293,6 +303,7 @@
         function Mercator() {
             var canvas = document.getElementById("canv");
             var cxt = canvas.getContext("2d");
+            cxt.strokeStyle = "white";
             cxt.clearRect(0, 0, 5000, 5000);
             cxt.beginPath();
             cxt.lineWidth = 2;
@@ -373,7 +384,7 @@
         function Mercator2() {
             var canvas = document.getElementById("canv");
             var cxt = canvas.getContext("2d");
-            cxt.strokeStyle = "black";
+            cxt.strokeStyle = "white";
             cxt.clearRect(0, 0, 5000, 5000);
             grid5();
             cxt.beginPath();
