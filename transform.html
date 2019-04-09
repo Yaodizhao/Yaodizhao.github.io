@@ -8,7 +8,7 @@
 
     <style type="text/css">
         button {
-            background-color: cornflowerblue;
+            background-color:lightskyblue;
             border: none;
             color:  white;
             padding: 1px 1px;
@@ -23,6 +23,7 @@
             cursor: pointer;
             border: 2px solid #6495ed;
             width: 100px;
+            margin-left:50px;
         }
 
             button:hover {
@@ -33,25 +34,23 @@
 </head>
 
 <body>
-    <div>
+    <div style="text-align:center">
         <input id="fileInput" type="file" onchange="processFiles()" />
-    </div>
-    <div>
+    
         <button id="ResetTr">重置</button>
-    </div>
-    <div>
+        &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp
         <button id="LeftTaperTr">左斜变换</button>
         <button id="ShoulderTr">耸肩变换</button>
         <button id="ScaleTr">比例变换</button>
         <button id="SpinTr">旋转变换</button>
         <button id="MirrorTr">对称变换</button>
         <button id="MoveTr">平移变换</button>
-    </div>
+    </divstyle="text-align:center">
     <div id="mydiv" style="width:90%; height: 80%; background: white; position: absolute;">
-        <canvas id="myCanvas1" style="width:45%; height: 90%; border:1px dashed black;">
+        <canvas id="myCanvas1" style="width:45%; height: 90%; border:1px dashed black;" hidden>
             Canvas Err.
         </canvas>
-        <canvas id="myCanvas2" style="width:45%; height: 90%; border:1px dashed black;"></canvas>
+        <canvas id="myCanvas2" style="width:45%; height: 90%; border:1px dashed black; margin: 30px 430px;"></canvas>
     </div>
 
     <script>
