@@ -1,416 +1,382 @@
 ﻿<!DOCTYPE html>
 <html>
 <head>
-    <meta charset="utf-8">
-    <title>道格拉斯-普克算法</title>
-
+    <title>数据压缩</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <style type="text/css">
-        .buttons {
-            background-color: white;
-            border: 2px solid cyan;
-            border-radius: 12%;
-            width: 70px;
-            margin-left: 70px;
+
+        input[type="button"] {
+            background-color: aliceblue;
+            border: none;
+            color:  Background;
+            padding: 1px 1px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            -webkit-transition-duration: 0.4s;
+            /* Safari */
+            transition-duration: 0.4s;
+            cursor: pointer;
+            border: 2px solid #6495ed;
+            width: 250px;
         }
 
-            .buttons:hover {
-                background-color: white;
-                color: white;
-                box-shadow: 0 12px 16px 0 rgba(0, 0, 0, 0.24);
-            }
-
-        .radios {
-            background-color: white;
-            margin-left: 70px;
+        input[type="text"] {
+          background-color:bisque;
         }
+       
+          
+
     </style>
 </head>
-<body bgcolor="white">
-    <h1 style="margin: 10px auto; width: 900px; text-align: center; background-color: white;">道格拉斯-普克算法数据压缩</h1>
-    <p style="margin-right: 20px; float: right; font-style: italic;"><small></small></p>
-    <br>
-    <div style="width: 1002px; margin: 0 auto;">
-        <input id="fileRead" type="file" style="visibility: hidden; position: absolute;" onchange="getPoints()">
-        <button type="button" class="buttons" onclick="fileRead.click()">加载</button>
-        <p id="compression" style="display: inline; margin-left: 70px;">压缩率： %</p>
-        <button type="button" disabled="disabled" class="buttons" name="radios" onclick="getAfterPolygons()">压缩</button>
-        <p style="display: inline; margin-left: 70px;">阈值：</p>
-        <input id="maxdis" type="text" value="3066" style="width: 70px;" onchange="setTolerance(this.value)">
-        <input type="radio" disabled="disabled" class="radios" name="radios" value="before" checked="checked" onclick="setValue(this.value)">压缩前
-        <input type="radio" disabled="disabled" class="radios" name="radios" value="after" onclick="setValue(this.value)">压缩后
-    </div>
-    <div style="width: 802px; margin: 10px auto;">
-        <canvas id="map" width="800" height="600" style="background-color: white; border: 1px solid black;"></canvas>
-    </div>
+<body>
+    
+                输入文件：
+                <input type="file" id="filemap">
+                <input type="button" id="readmap" value="读取文件" onclick="readmap()"><!--onclick-->
+                <input type="button" id="showm" value="显示兰勃特投影的地图" onclick="China_L_change()">
+                <input type="button" id="DP_YS" value="道格拉斯一普克法压缩" onclick="DP()">
+                压缩度(%)：
+                <input type="text" id="result_DP">
+                <!--                     <input list="YS_pp">
+                                     <datalist id="YS_PP">
+                                         <option>10</option>
+                                         <option>20</option>
+                                         <option>30</option>
+                                         <option>40</option>
+                                         <option>50</option>
+                                         <option>60</option>
+                                         <option>70</option>
+                                         <option>80</option>
+                                         <option>90</option>
+                                     </datalist>
+                -->
+          
+    <table>
+        <tr>
+            <td>
+                <canvas id="canvas" width="1200" height="800" style="border:1px solid #000000;"></canvas>
+            </td>
 
-    <script type="text/javascript">
-        //全局变量的设置
-        //地图点
-        function mapPoint(x, y) {
-            this.x = x;
-            this.y = y;
-        }
-        //暂存点,多了一个del用于标记该点最终是否要删除
-        function tempPoint(del, x, y) {
-            this.del = del;
-            this.x = x;
-            this.y = y;
-        }
-        //面对象,包括了编号和点坐标数组
-        function Polygon(number, points) {
-            this.number = number;
-            this.points = points;
+        </tr>
+    </table>
+    <style>
+        table {
+            border: 1px solid #333338;
+            width: 100%;
+            text-align: center;
         }
 
-        var polygonsBefore = new Array();//压缩前面的数组
-        var polygonsAfter = new Array();//压缩后面的数组
-        var change = "before";//压缩前后标识
-        var tolerance = document.getElementById('maxdis').value;//阈值
-        var lastTolerance = 0;//暂存上一次的阈值
+        tr {
+            border: 1px solid #0906F1;
+            text-align: center;
+        }
 
-        var canva = document.getElementById('map');
-        var cxt = canva.getContext('2d');
-        var isDraw = false;
-    </script>
-
-    <script type="text/javascript">
-        //读取文件,得到压缩前的面
-        function getPoints() {
-            //重置某些全局变量
-            polygonsBefore.splice(0, polygonsBefore.length);
-            polygonsAfter.splice(0, polygonsAfter.length);
-            lastTolerance = 0;
-            var file = document.getElementById('fileRead').files[0];
-            var reader = new FileReader();
-            reader.readAsText(file);
-            //读取和存储
-            reader.onload = function (e) {
-                var str = reader.result;
-                var numcharacter = "";
-                var x = 0,
-                    y = 0;
-                var flag = 0;
-                var number = 0;
-                var character = str[flag];
-                var pointTemp = new mapPoint(0, 0);
-                var pointsTemp = new Array();
-                while (character != null) {
-                    if (character == "E") {
-                        flag += 5;
-                        character = str[flag];
-                    } else {
-                        while (character != "\n") {
-                            numcharacter += character;
-                            character = str[++flag];
-                        }
-                        number = parseInt(numcharacter);
-                        numcharacter = "";
-                        character = str[++flag];
-                        while (character != "E") {
-                            while (character != ",") {
-                                numcharacter += character;
-                                character = str[++flag];
-                            }
-                            character = str[++flag];
-                            pointTemp.x = parseFloat(numcharacter);
-                            numcharacter = "";
-                            while (character != "\n") {
-                                numcharacter += character;
-                                character = str[++flag];
-                            }
-                            character = str[++flag];
-                            pointTemp.y = parseFloat(numcharacter);
-                            numcharacter = "";
-                            pointsTemp.push(JSON.parse(JSON.stringify(pointTemp)));
-                        }
-                    }
-                    var points = pointsTemp.slice();
-                    var polygon = new Polygon(number, points);
-                    polygonsBefore.push(polygon);
-                    pointsTemp.splice(0, pointsTemp.length);
-                    flag += 5;
-                    character = str[flag];
-                }
-                polygonsBefore.pop();//消除最后一个END的影响
-                draw();//绘制
-                //取消某些按钮的禁用
-                var obj = document.getElementsByName('radios');
-                for (var i = 0; i < obj.length; i++) {
-                    obj[i].disabled = false;
-                }
-            }
+        td {
+            border: 1px solid #000000;
+            text-align: center;
         }
-        //设置变化标识值
-        function setValue(value) {
-            change = value;
-            draw();
-        }
-        //设置阈值
-        function setTolerance(value) {
-            tolerance = value;
-        }
-        //得到压缩后的点
-        function getAfterPolygons() {
-            //阈值改变的情况下才重新压缩
-            if (lastTolerance != tolerance) {
-                //清除上次压缩后的点
-                if (polygonsAfter.length != 0) {
-                    polygonsAfter.splice(0, polygonsAfter.length);
-                }
-                var N = polygonsBefore.length;
-                for (var i = 0; i < N; i++) {
-                    var n = polygonsBefore[i].points.length;
-                    if (polygonsBefore[i].points[0].x != polygonsBefore[i].points[n - 1].x ||
-                        (polygonsBefore[i].points[0].x == polygonsBefore[i].points[n - 1].x &&
-                            polygonsBefore[i].points[0].y != polygonsBefore[i].points[n - 1].y)) {
-                        //当线段不围成一个面时
-                        var number = polygonsBefore[i].number;
-                        var poistemp = new Array();
-                        var poideltemp = new Array();
-                        //将转换前的点转为带del标识的点
-                        for (var j = 0; j < n; j++) {
-                            var poiWithDel = new tempPoint(false, 0, 0);
-                            poiWithDel.x = polygonsBefore[i].points[j].x;
-                            poiWithDel.y = polygonsBefore[i].points[j].y;
-                            poideltemp.push(JSON.parse(JSON.stringify(poiWithDel)));
-                        }
-                        DouglasPeucker(poideltemp, 0, poideltemp.length - 1);//进行道格拉斯压缩
-                        //保留不被压缩掉的点存入poistemp
-                        for (var j = 0; j < n; j++) {
-                            if (poideltemp[j].del == false) {
-                                var poiSave = new mapPoint(0, 0);
-                                poiSave.x = poideltemp[j].x;
-                                poiSave.y = poideltemp[j].y;
-                                poistemp.push(poiSave);
-                            }
-                        }
-                        var points = poistemp.slice();//转存
-                        poistemp.slice(0, poistemp.length);
-                        var polygon = new Polygon(number, points);
-                        polygonsAfter.push(JSON.parse(JSON.stringify(polygon)));//得到压缩后的一条线段
-                    } else {
-                        //当线段围成面时
-                        var poistemp = new Array();
-                        var number = polygonsBefore[i].number;
-                        var cut = getCutNumber(polygonsBefore[i].points);//找到离起点最远点的下标,以此切断面
-                        //将前半段转存入带del标识的poistemp1
-                        var poistemp1 = new Array();
-                        for (var j = 0; j < cut; j++) {
-                            var poiWithDel = new tempPoint(false, 0, 0);
-                            poiWithDel.x = polygonsBefore[i].points[j].x;
-                            poiWithDel.y = polygonsBefore[i].points[j].y;
-                            poistemp1.push(JSON.parse(JSON.stringify(poiWithDel)));
-                        }
-                        //将后半段转存入带del标识的poistemp2
-                        var poistemp2 = new Array();
-                        for (var j = cut; j < n; j++) {
-                            var poiWithDel = new tempPoint(false, 0, 0);
-                            poiWithDel.x = polygonsBefore[i].points[j].x;
-                            poiWithDel.y = polygonsBefore[i].points[j].y;
-                            poistemp2.push(JSON.parse(JSON.stringify(poiWithDel)));
-                        }
-                        //进行压缩
-                        DouglasPeucker(poistemp1, 0, poistemp1.length - 1);
-                        DouglasPeucker(poistemp2, 0, poistemp2.length - 1);
-                        //得到压缩后剩下的点
-                        for (var j = 0; j < poistemp1.length; j++) {
-                            if (poistemp1[j].del == false) {
-                                var poiSave = new mapPoint(0, 0);
-                                poiSave.x = poistemp1[j].x;
-                                poiSave.y = poistemp1[j].y;
-                                poistemp.push(JSON.parse(JSON.stringify(poiSave)));
-                            }
-                        }
-                        for (var j = 0; j < poistemp2.length; j++) {
-                            if (poistemp2[j].del == false) {
-                                var poiSave = new mapPoint(0, 0);
-                                poiSave.x = poistemp2[j].x;
-                                poiSave.y = poistemp2[j].y;
-                                poistemp.push(JSON.parse(JSON.stringify(poiSave)));
-                            }
-                        }
-                        //得到压缩后的一段线段
-                        var points = poistemp.slice();
-                        poistemp.splice(0, poistemp.length);
-                        var polygon = new Polygon(number, points);
-                        polygonsAfter.push(polygon);
-                    }
-                }
-                lastTolerance = tolerance;//将这次的阈值暂存
-                setCompressionRatio();//计算压缩率
-                draw();//绘制
-            }
-        }
-        //绘制地图
-        function draw() {
-            if (isDraw == true) {
-                cxt.clearRect(0, 0, canva.width, canva.height);
-            }
-            //绘制未压缩的地图
-            if (change == "before") {
-                var N = polygonsBefore.length;
-                //带有缩放和平移信息的对象
-                var vary = {
-                    scale: 0,//缩放比例
-                    moveX: 0,//X轴移动长度
-                    moveY: 0//Y轴移动长度
-                }
-                getVary(polygonsBefore, vary);//得到缩放和平移的信息
-                //绘制
-                for (var i = 0; i < N; i++) {
-                    var n = polygonsBefore[i].points.length;
-                    cxt.beginPath();
-                    var xt = (polygonsBefore[i].points[0].x + vary.moveX) * vary.scale;
-                    var yt = canva.height - (polygonsBefore[i].points[0].y + vary.moveY) * vary.scale;
-                    cxt.moveTo(xt, yt);
-                    for (var j = 1; j < n; j++) {
-                        var xt = (polygonsBefore[i].points[j].x + vary.moveX) * vary.scale;
-                        var yt = canva.height - (polygonsBefore[i].points[j].y + vary.moveY) * vary.scale;
-                        cxt.lineTo(xt, yt);
-                    }
-                    cxt.stroke();
-                    cxt.beginPath();
-                }
-            }
-            //绘制压缩后的地图
-            if (change == "after") {
-                var N = polygonsAfter.length;
-                var vary = {
-                    scale: 0,//缩放比例
-                    moveX: 0,//X轴移动长度
-                    moveY: 0//Y轴移动长度
-                }
-                getVary(polygonsAfter, vary);
-                for (var i = 0; i < N; i++) {
-                    var n = polygonsAfter[i].points.length;
-                    cxt.beginPath();
-                    var xt = (polygonsAfter[i].points[0].x + vary.moveX) * vary.scale;
-                    var yt = canva.height - (polygonsAfter[i].points[0].y + vary.moveY) * vary.scale;
-                    cxt.moveTo(xt, yt);
-                    for (var j = 1; j < n; j++) {
-                        var xt = (polygonsAfter[i].points[j].x + vary.moveX) * vary.scale;
-                        var yt = canva.height - (polygonsAfter[i].points[j].y + vary.moveY) * vary.scale;
-                        cxt.lineTo(xt, yt);
-                    }
-                    cxt.stroke();
-                    cxt.beginPath();
-                }
-            }
-            isDraw = true;
-        }
-        //根据传入的地图点确定缩放的比例和平移长度
-        function getVary(polygons, vary) {
-            var N = polygons.length;
-            var xMin = polygons[0].points[0].x;
-            var yMin = polygons[0].points[0].y;
-            var xMax = polygons[0].points[0].x;
-            var yMax = polygons[0].points[0].y;
-            //获取最小外接矩形
-            for (var i = 0; i < N; i++) {
-                var n = polygons[i].points.length;
-                for (var j = 0; j < n; j++) {
-                    if (polygons[i].points[j].x < xMin) {
-                        xMin = polygons[i].points[j].x;
-                    }
-                    if (polygons[i].points[j].x > xMax) {
-                        xMax = polygons[i].points[j].x;
-                    }
-                    if (polygons[i].points[j].y < yMin) {
-                        yMin = polygons[i].points[j].y;
-                    }
-                    if (polygons[i].points[j].y > yMax) {
-                        yMax = polygons[i].points[j].y;
-                    }
-                }
-            }
-            //分别计算xy方向的缩放比例
-            var scaleX = canva.width / (xMax - xMin);
-            var scaleY = canva.height / (yMax - yMin);
-            //选取合适的缩放比例,计算平移量
-            if (scaleX < scaleY) {
-                vary.scale = scaleX;
-                var dy = (yMax - yMin) * scaleX;
-                var upY = (canva.height - dy) / 2 / scaleX;
-                vary.moveX = -xMin;
-                vary.moveY = -yMin + upY;
-            } else {
-                vary.scale = scaleY;
-                var dx = (xMax - xMin) * scaleY;
-                var upX = (canva.width - dx) / 2 / scaleY;
-                vary.moveX = -xMin + upX;
-                vary.moveY = -yMin;
-            }
-        }
-        //获取离起点最远的点的下标
-        function getCutNumber(points) {
-            var dismax = 0;
-            var temp = 0;
-            var n = points.length;
-            for (var i = 1; i < n; i++) {
-                var dx = points[i].x - points[0].x;
-                var dy = points[i].y - points[0].y;
-                var dis = Math.sqrt(dx * dx + dy * dy);
-                if (dis > dismax) {
-                    dismax = dis;
-                    temp = i;
-                }
-            }
-            return temp;
-        }
-        //道格拉斯压缩算法
-        function DouglasPeucker(points, start, end) {
-            //只剩首尾两个点退出递归
-            if (end - start == 1) {
-                return 0;
-            }
-            var distance = 0;
-            var temp = 0;
-            //获取最大距离
-            for (var i = start + 1; i < end - 1; i++) {
-                var distemp = distanceToLine(points[start].x, points[start].y, points[end].x, points[end].y, points[i].x, points[i]
-                    .y);//点到线的距离
-                if (distemp > distance) {
-                    distance = distemp;
-                    temp = i;
-                }
-            }
-            //最大距离小于阈值则全部舍去
-            if (distance <= tolerance) {
-                for (var i = start + 1; i < end - 1; i++) {
-                    points[i].del = true;
-                }
-                return 0;
-            } else {
-                //否则进入下一层递归
-                DouglasPeucker(points, start, temp);
-                DouglasPeucker(points, temp + 1, end);
-            }
-        }
-        //点到直线距离
-        function distanceToLine(x1, y1, x2, y2, x0, y0) {
-            var A = y2 - y1;
-            var B = x1 - x2;
-            var C = x2 * y1 - x1 * y2;
-            var dis = Math.abs(A * x0 + B * y0 + C) / Math.sqrt(A * A + B * B);
-            return dis;
-        }
-        //计算压缩率并显示
-        function setCompressionRatio() {
-            var numBefore = 0;
-            var numAfter = 0;
-            var comp = 0;
-
-            for (var i = 0; i < polygonsBefore.length; i++) {
-                numBefore += polygonsBefore[i].points.length;
-            }
-            for (var i = 0; i < polygonsAfter.length; i++) {
-                numAfter += polygonsAfter[i].points.length;
-            }
-            comp = (numAfter / numBefore * 100).toFixed(2);
-
-            var obj = document.getElementById('compression');
-            obj.innerHTML = "压缩率：" + comp.toString() + " %";
-        }
-    </script>
+    </style>
 </body>
+
+<script type="text/javascript">
+//1、根据道格拉斯一普克法，编写程序对经过兰勃特投影的中国版图数据进行压缩和过滤
+//2、屏幕绘图显示压缩前后的地图数据
+//3、数据压缩率为50%
+var map=new Array();//记录地图数据**map[i][2]=这个点是否需要
+                    //map[i][0]=x,map[i][1]=y
+var txtstr="";//记录txt中所有内容
+var txtstr_A=new Array();
+var star_end=new Array();//记录起点-终点0=x1,1=y1,2=x2,3=y2，4=dis
+var pointnum=0;//所有点
+var DP_pointnum=0;//有效点
+var DP_num=1;//记录当前是第几次压缩
+function readfile(filename,str_A)
+{//读取文件
+    //记录有多少个区域
+    var areanum=0;
+    var reader=new FileReader();
+    reader.readAsText(filename,"UTF-8");
+    reader.onload=function(f)
+    {
+        txtstr=txtstr+event.target.result;
+    }
+    txtstr_A=txtstr.split("\n");
+    for(var i=0;i<txtstr_A.length+2;i++)
+    {
+        str_A[i]=new Array();
+        for(j=0;j<3;j++)
+        {
+            str_A[i][j]=0;
+        }
+    }
+    for(var i=0;i<txtstr_A.length;i++)
+    {//将文件转成数字形式
+         if(isNaN(parseInt(txtstr_A[i])))
+        {//String(txtstr_A[i])==String(txtstr_A[3])
+            str_A[i][0]=999;//线结束
+             continue;
+        }
+        str_A[i]=txtstr_A[i].split(",");
+        str_A[i][0]=parseFloat(str_A[i][0]);
+        str_A[i][1]=parseFloat(str_A[i][1]);
+        if(isNaN(str_A[i][1]))
+        {//当有些整数数字判断不出，再一次检查一遍
+            str_A[i][0]=-1;//线开始
+            areanum++;
+            continue;
+        }
+         continue;
+    //结束初始化
+    }
+    str_A[txtstr_A.length][0]=999;
+    str_A[txtstr_A.length+1][0]=999;
+//初始化起点-终点-中间距离
+    for(var i=0;i<areanum;i++)
+    {
+        star_end[i]=new Array();
+        for(var j=0;j<5;j++)
+        {
+            star_end[i][j]=0;
+        }
+    }
+}
+function readmap()
+{//点击“读取文件”事件
+    var filename=document.getElementById("filemap").files[0];
+    readfile(filename,map);
+//    console.log(map);
+}
+function China_L_change()
+{//中国-兰勃特投影转换
+//a=6378245,e^2=0.006693421622966
+   //每次都需要重新读取
+   readmap();
+   var a=6378245;
+   var e2=0.006693421622966;
+   var e=Math.sqrt(e2);
+   var B1=20*Math.PI/180;
+   var B2=40*Math.PI/180;
+   var m_0_B1=Math.cos(B1)/Math.sqrt(1-e2*Math.pow(Math.sin(B1),2))//对原点的mB1
+   var m_0_B2=Math.cos(B2)/Math.sqrt(1-e2*Math.pow(Math.sin(B2),2))//对原点的mB2
+   var t_0_B1=Math.tan(Math.PI/4-(B1)/2)/Math.pow((1-e*Math.sin(B1))/(1+e*Math.sin(B1)),e/2);//tB1
+   var t_0_B2=Math.tan(Math.PI/4-(B2)/2)/Math.pow((1-e*Math.sin(B2))/(1+e*Math.sin(B2)),e/2);//tB2
+   var t0=Math.tan(Math.PI/4)/Math.pow((1-e*Math.sin(0))/(1+e*Math.sin(0)),e/2);//tB0
+   var n=(Math.log(m_0_B1/m_0_B2)/Math.LN10)/(Math.log(t_0_B1/t_0_B2)/Math.LN10);
+   var F=m_0_B1/(n*Math.pow(t_0_B1,n));
+   var r0=a*F*Math.pow(t0,n);
+//计算各个坐标转换之后的值
+   for(var i=0;i<map.length;i++)
+   {
+       if(map[i][0]==-1)
+       {
+           continue;
+       }
+       if(map[i][0]==999)
+       {
+           continue;
+       }
+       var B=parseFloat(map[i][1]);var L=map[i][0];
+       var L_A=n*(L-105)*Math.PI/180;//L_A=θ的弧度
+       var B_p=B*Math.PI/180;//B_p=角度转弧度后的值
+       var t_L=Math.tan(Math.PI/4-(B_p)/2)/Math.pow((1-e*Math.sin(B_p))/(1+e*Math.sin(B_p)),e/2);
+       var r=a*F*Math.pow(t_L,n);
+       map[i][1]=600-(r0-r*Math.cos(L_A))/10000;
+       map[i][0]=(r*Math.sin(L_A))/10000+600;
+       map[i][2]=1;
+//记录总共有多少个点=pointnum
+       pointnum++;
+   }
+       Draw_try();
+//console-map
+       console.log(map);
+}
+function Draw_try()
+{//直接绘制map，不做处理
+         clearCanvas();
+        var c=document.getElementById("canvas");
+        var ctx=c.getContext("2d");
+        ctx.beginPath();
+        for(var j=0;j<map.length;j++)
+        {
+            if(map[j][0]==-1)
+            {
+                ctx.moveTo((map[j+1][0]),(map[j+1][1])+100);
+                j=j+1;
+                continue;
+            }
+            if(map[j][0]==999)
+            {//有END时结束当前画图，开始下一条线
+                if(map[j+1][0]==999)
+                {//有两个END结束
+                    break;
+                }
+                continue;
+            }
+            //既不是起点也不是END
+            if(map[j][2]==1)
+            {
+                ctx.lineTo((map[j][0]),(map[j][1])+100);
+            }
+        }
+         ctx.strokeStyle="#FF0000";
+         ctx.stroke();
+         ctx.closepath;
+}
+function clearCanvas()
+{//清空画布
+      var c=document.getElementById("canvas");
+      var cxt=c.getContext("2d");
+      cxt.clearRect(0,0,c.width,c.height);
+}
+function DP()
+{//道格拉斯-普朗克数据压缩
+   //map[i][2]=0-不取，=1-取
+   //A，B，C记录曲线MN的方程
+   DP_num++;
+   var A=0;
+   var B=0;
+   var C=0;
+   var D_se=0;//记录起点-终点距离
+   var d=0;//记录当前距离
+   var areanum=0;
+//每次重新开始计算时，DP_pointnum=0
+   DP_pointnum=0;
+   findstarend();//找起点-终点-中间距离
+   //计算A，B，C
+   for(var i=0;i<map.length;i++)
+   {
+      if(map[i][0]==-1)
+      {//开始
+          D_se=Math.sqrt(Math.pow(star_end[areanum][1]-star_end[areanum][3],2)+Math.pow(star_end[areanum][0]-star_end[areanum][2],2))
+          A=(star_end[areanum][1]-star_end[areanum][3])/D_se;
+          B=(star_end[areanum][2]-star_end[areanum][0])/D_se;
+          C=(star_end[areanum][0]*star_end[areanum][3]-star_end[areanum][2]*star_end[areanum][1])/D_se;
+          //起点一定要取
+          map[i+1][2]=1;
+          DP_pointnum++;
+          i++;
+          continue;
+      }
+      if(map[i][0]==999)
+      {//结束
+          if(star_end[areanum][2]==map[i-2][0]&&star_end[areanum][3]==map[i-2][1])
+          {
+              map[i-2][2]=1;
+              DP_pointnum++;
+          }
+          map[i-1][2]=1;
+          DP_pointnum++;
+          areanum++;
+          if(map[i+1][0]==999)
+          {
+              break;
+          }
+          continue;
+      }
+      //判断是否是可取的，如果上次存在数据，先清空
+      if(map[i][2]==1)
+      {//当上一次可取时，判断当前是否可取
+        map[i][2]=0;//先设为不可取
+        d=Math.abs(A*map[i][0]+B*map[i][1]+C);
+        if(d>star_end[areanum][4])
+        {//距离大于中间值=取
+           map[i][2]=1;
+           DP_pointnum++;
+        }
+      }
+   }
+//绘制
+Draw_try();
+//计算压缩效率
+document.getElementById("result_DP").value=(1-DP_pointnum/pointnum)*100;
+//console-map
+console.log(map);
+}
+function findstarend()
+{//找起点-终点+最大距离-最小距离=ε
+   var areanum=0;
+   var max=0;var min=0;
+   var A=0;var B=0;var C=0;var D_se=0;
+   var d=0;//记录当前的距离
+//找起点-终点
+   for(var i=0;i<map.length;i++)
+   {
+      if(map[i][0]==-1)
+      {
+          star_end[areanum][0]=map[i+1][0];
+          star_end[areanum][1]=map[i+1][1];
+          continue;
+      }
+      if(map[i][0]==999)
+      {
+          if(star_end[areanum][0]==map[i-1][0]&&star_end[areanum][1]==map[i-1][1])
+          {//当最后一个点是起点时
+             star_end[areanum][2]=map[i-2][0];
+             star_end[areanum][3]=map[i-2][1];
+          }
+          else
+          {//当最后一个点是终点，不是起点
+             star_end[areanum][2]=map[i-1][0];
+             star_end[areanum][3]=map[i-1][1];
+          }
+          areanum++;
+          if(map[i+1][0]==999)
+          {
+              break;
+          }
+          continue;
+      }
+   }
+//依据当前是第几次压缩进行判断中间距离的取值
+//找中间距离(1-1/num)*(max-min)
+   areanum=0;
+   for(var i=0;i<map.length;i++)
+   {
+      if(map[i][0]==-1)
+      {
+          D_se=Math.sqrt(Math.pow(star_end[areanum][1]-star_end[areanum][3],2)+Math.pow(star_end[areanum][0]-star_end[areanum][2],2))
+          A=(star_end[areanum][1]-star_end[areanum][3])/D_se;
+          B=(star_end[areanum][2]-star_end[areanum][0])/D_se;
+          C=(star_end[areanum][0]*star_end[areanum][3]-star_end[areanum][2]*star_end[areanum][1])/D_se;
+          max=0;min=0;
+          i++;
+          continue;
+      }
+      if(map[i][0]==999)
+      {//区域结束
+          star_end[areanum][4]=(max-min)*(1-1/DP_num);
+          areanum++;
+          if(map[i+1][0]==999)
+          {
+              break;
+          }
+          continue;
+      }
+      if(map[i+1][0]==999)
+      {//当是区域的终点时
+         continue;
+      }
+      //计算距离，除去起点+终点
+      if(map[i][2]==1)
+      {
+        d=Math.abs(A*map[i][0]+B*map[i][1]+C);
+        if(max<d)
+        {
+            max=d;
+        }
+        if(min>d)
+        {
+            min=d;
+        }
+      }
+   }
+//console输出star_end
+   console.log(star_end);
+}
+</script>
+
+
 </html>
