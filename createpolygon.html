@@ -472,10 +472,10 @@
                     break;
                 }
                 if (j == plgon_to_line[i][0]) {
-                    txt3 = txt3 + Math.abs(plgon_to_line[i][j]) ;
+                    txt3 = txt3 + plgon_to_line[i][j];
                 }
                 else {
-                    txt3 = txt3 + Math.abs(plgon_to_line[i][j]) + "->";
+                    txt3 = txt3 + plgon_to_line[i][j] + " -> ";
                 }
             }
             txt3 = txt3 + "\r\n";
